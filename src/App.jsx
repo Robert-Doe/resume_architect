@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import CreditsPage from "./components/CreditsPage";
 import EditorPanel from "./components/EditorPanel";
 import ResumePreview from "./components/ResumePreview";
+import UsageGuidePage from "./components/UsageGuidePage";
 import {
   createBlankResume,
   createSampleResume,
@@ -186,54 +187,39 @@ export default function App() {
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
+
   if (page === "credits") {
+    return <CreditsPage onBack={() => setPage("editor")} />;
+  }
+
+  if (page === "guide") {
     return (
-      <>
-        <header className="app-topbar">
-          <div className="topbar-brand">
-            <span className="topbar-logo-mark" aria-hidden="true">◈</span>
-            <span className="topbar-title">Resume Architect</span>
-          </div>
-          <div className="topbar-center" />
-          <div className="topbar-actions">
-            <button type="button" className="topbar-link-btn" onClick={() => setPage("editor")}>
-              ← Back to Editor
-            </button>
-          </div>
-        </header>
-        <CreditsPage onBack={() => setPage("editor")} />
-      </>
+      <UsageGuidePage
+        onBack={() => setPage("editor")}
+        onOpenCredits={() => setPage("credits")}
+      />
     );
   }
 
   return (
     <div className={`app-shell ${previewOpen ? "preview-open" : ""}`}>
-
-      {/* ── Dashboard Topbar ── */}
       <header className="app-topbar">
         <div className="topbar-brand">
-          <span className="topbar-logo-mark" aria-hidden="true">◈</span>
+          <span className="topbar-logo-mark" aria-hidden="true">*</span>
           <span className="topbar-title">Resume Architect</span>
         </div>
-
         <div className="topbar-center">
-          <span
-            className="topbar-template-pill"
-            style={{ "--tpill-dot": activeTemplate.palette.accent }}
-          >
-            <span className="topbar-template-dot" aria-hidden="true" />
-            {activeTemplate.name}
+          <span className="topbar-template-pill">
+            Template: {activeTemplate.name}
           </span>
-          <span className="topbar-divider" aria-hidden="true">·</span>
-          <span className="topbar-stat">{enabledSections}/{totalSections} sections</span>
-          <span className="topbar-divider" aria-hidden="true">·</span>
-          <span className="topbar-save-indicator" aria-label="Draft auto-saved">
-            <span className="topbar-save-dot" aria-hidden="true" />
-            Auto-saved
+          <span className="topbar-template-pill">
+            Sections: {enabledSections}/{totalSections}
           </span>
         </div>
-
         <div className="topbar-actions">
+          <button type="button" className="topbar-link-btn" onClick={() => setPage("guide")}>
+            How it works
+          </button>
           <button type="button" className="topbar-link-btn" onClick={() => setPage("credits")}>
             Credits
           </button>
@@ -244,17 +230,19 @@ export default function App() {
             disabled={compiling}
           >
             {compiling ? (
-              <><span className="compile-spinner" aria-hidden="true" />Compiling…</>
+              <>
+                <span className="compile-spinner" aria-hidden="true" />
+                Compiling...
+              </>
             ) : previewOpen ? (
-              <>✕&thinsp; Close Preview</>
+              <>Close Preview</>
             ) : (
-              <>⬡&thinsp; Compile &amp; Preview</>
+              <>Compile &amp; Preview</>
             )}
           </button>
         </div>
       </header>
 
-      {/* ── Editor ── */}
       <div className="app-body">
         <EditorPanel
           resume={resume}
@@ -278,7 +266,6 @@ export default function App() {
         />
       </div>
 
-      {/* ── Preview overlay backdrop ── */}
       {previewOpen && (
         <div
           className="preview-overlay-bg"
@@ -287,11 +274,8 @@ export default function App() {
         />
       )}
 
-      {/* ── Preview Side Panel (slide-in from right) ── */}
       {previewOpen && (
         <aside className="preview-panel" aria-label="Resume preview panel">
-
-          {/* Panel header */}
           <div className="preview-panel-head">
             <div className="preview-panel-title-block">
               <p className="eyebrow">Live Preview</p>
@@ -304,23 +288,22 @@ export default function App() {
               onClick={() => setPreviewOpen(false)}
               aria-label="Close preview"
             >
-              ✕
+              X
             </button>
           </div>
 
-          {/* Download bar */}
           <div className="download-bar">
             <div className="format-pills">
               {[
                 {
                   id: "pdf-image",
                   label: "PDF (Designed)",
-                  hint: "Pixel-perfect — matches the visual template exactly",
+                  hint: "Pixel-perfect - matches the visual template exactly",
                 },
                 {
                   id: "pdf-text",
                   label: "PDF (Searchable)",
-                  hint: "Text-based PDF — selectable & highlightable in any PDF reader",
+                  hint: "Text-based PDF - selectable & highlightable in any PDF reader",
                 },
                 {
                   id: "docx",
@@ -350,24 +333,21 @@ export default function App() {
               onClick={handleDownload}
               disabled={exporting}
             >
-              {exporting ? "Exporting…" : "↓ Download"}
+              {exporting ? "Exporting..." : "Download"}
             </button>
           </div>
 
-          {/* Export status toast */}
           {exportStatus && (
             <div className={`export-toast export-toast--${exportStatus}`} role="status">
               {exportMsg}
             </div>
           )}
 
-          {/* Resume document */}
           <div className="preview-scroll">
             <div ref={previewRef}>
               <ResumePreview resume={resume} templates={templateCatalog} />
             </div>
           </div>
-
         </aside>
       )}
     </div>

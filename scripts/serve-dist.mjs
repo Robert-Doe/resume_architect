@@ -1,9 +1,10 @@
-import { createReadStream, existsSync } from "node:fs";
+import { createReadStream, existsSync, statSync } from "node:fs";
 import { promises as fs } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const distDir = new URL("../dist/", import.meta.url);
+const distDir = fileURLToPath(new URL("../dist/", import.meta.url));
 const port = Number(process.env.PORT || 4173);
 
 const mimeTypes = {
@@ -20,13 +21,17 @@ const resolveFilePath = (requestUrl) => {
   const url = new URL(requestUrl, `http://127.0.0.1:${port}`);
   const pathname = decodeURIComponent(url.pathname);
   const sanitized = normalize(pathname).replace(/^(\.\.(\/|\\|$))+/, "");
-  const target = join(distDir.pathname, sanitized);
+  const target = join(distDir, sanitized);
 
   if (existsSync(target)) {
+    const stat = statSync(target);
+    if (stat.isDirectory()) {
+      return join(target, "index.html");
+    }
     return target;
   }
 
-  return join(distDir.pathname, "index.html");
+  return join(distDir, "index.html");
 };
 
 const server = createServer(async (request, response) => {
@@ -34,12 +39,6 @@ const server = createServer(async (request, response) => {
 
   try {
     const stat = await fs.stat(filePath);
-    if (stat.isDirectory()) {
-      response.writeHead(302, { Location: "/" });
-      response.end();
-      return;
-    }
-
     const mimeType = mimeTypes[extname(filePath)] || "application/octet-stream";
     response.writeHead(200, {
       "Content-Length": stat.size,
